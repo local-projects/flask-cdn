@@ -1,8 +1,12 @@
 import os
 
+from urlparse import urlparse
+import requests
+
 from flask import url_for as flask_url_for
 from flask import current_app
 
+from flask_cdn_rackspace import CDN_RACKSPACE
 
 def url_for(endpoint, **values):
     """
@@ -16,16 +20,41 @@ def url_for(endpoint, **values):
     templates automatically. It is unlikely that this function will need to be
     directly called from within your application code, unless you need to refer
     to static assets outside of your templates.
+
+    Actually we do this now because it allows us to switch between local static
+    and flask assets
     """
     app = current_app
 
     if app.debug and not app.config['CDN_DEBUG']:
+
         return flask_url_for(endpoint, **values)
 
     if endpoint == 'static':
         scheme = 'http'
         if app.config['CDN_HTTPS']:
             scheme = 'https'
+
+        # rackspace does not include the /static, everything is container.com/item.jpg
+        if  app.config['CDN_USE_RACKSPACE']:
+            rack_url = app.cdn_rackspace.rackspace_url
+            rack_parts = urlparse(rack_url)
+            rack_bare_url = rack_parts.netloc + rack_parts.path
+
+            urls = app.url_map.bind( rack_bare_url, url_scheme=scheme )
+            # swap out with the rackspace endpoint rule to avoid the '/static/' path
+            url = urls.build(endpoint = app.cdn_rackspace.rackspace_endpoint, values=values, force_external=True)
+
+            # test the url
+            resp = requests.head(url)
+            if resp.status_code == 200:
+                # use remote url
+                return url
+            else:
+                # fall back to the local static dir
+                
+                return flask_url_for(endpoint, **values)
+
 
         urls = app.url_map.bind(app.config['CDN_DOMAIN'], url_scheme=scheme)
 
@@ -36,6 +65,7 @@ def url_for(endpoint, **values):
         return urls.build(endpoint, values=values, force_external=True)
 
     return flask_url_for(endpoint, **values)
+
 
 
 class CDN(object):
@@ -72,3 +102,11 @@ class CDN(object):
 
         if app.config['CDN_DOMAIN']:
             app.jinja_env.globals['url_for'] = url_for
+
+        if app.config['CDN_USE_RACKSPACE']:
+            app.cdn_rackspace = CDN_RACKSPACE(app)
+
+            if app.config['CDN_HTTPS']:
+                warnStr = "Warning, rackspace file hosting and CDN_HTTPS shouldn't be used together due to cert domain issues."
+                app.logger.warning(warnStr)
+
