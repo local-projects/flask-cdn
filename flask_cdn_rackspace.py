@@ -138,8 +138,6 @@ class CDN_RACKSPACE(object):
         new_file = filename
         full_file_path = os.path.join( base_path, new_file )
 
-        print "Trying ", full_file_path
-
         while (   
 
             ( os.path.isfile(full_file_path) 
