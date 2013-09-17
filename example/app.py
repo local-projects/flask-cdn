@@ -13,6 +13,7 @@ app.config['CDN_RACKSPACE_CONTAINER'] = 'container'
 app.config['CDN_RACKSPACE_REGION'] = 'DFW'
 app.config['CDN_HOSTED_IMAGES_LOCAL_DIR'] = '/tmp'
 app.config['CDN_ALLOWED_EXTENSIONS'] = ['.jpg', '.gif', '.png', '.jpeg', '.jpe', '.svg', '.bmp']
+app.config['CDN_RACKSPACE_HEAD_TEST'] = True
 
 CDN(app)
 

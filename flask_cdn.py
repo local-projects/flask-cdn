@@ -45,15 +45,19 @@ def url_for(endpoint, **values):
             # swap out with the rackspace endpoint rule to avoid the '/static/' path
             url = urls.build(endpoint = app.cdn_rackspace.rackspace_endpoint, values=values, force_external=True)
 
-            # test the url
-            resp = requests.head(url)
-            if resp.status_code == 200:
-                # use remote url
-                return url
+            if app.config['CDN_RACKSPACE_HEAD_TEST']
+                # test the url
+                resp = requests.head(url)
+                if resp.status_code == 200:
+                    # use remote url
+                    return url
+                else:
+                    # fall back to the local static dir
+                    
+                    return flask_url_for(endpoint, **values)
             else:
-                # fall back to the local static dir
-                
-                return flask_url_for(endpoint, **values)
+                # just return the url
+                return url
 
 
         urls = app.url_map.bind(app.config['CDN_DOMAIN'], url_scheme=scheme)
@@ -95,7 +99,9 @@ class CDN(object):
         defaults = [('CDN_DOMAIN', None),
                     ('CDN_DEBUG', False),
                     ('CDN_HTTPS', False),
-                    ('CDN_TIMESTAMP', True)]
+                    ('CDN_TIMESTAMP', True),
+                    ('CDN_USE_RACKSPACE', False),
+                    ('CDN_RACKSPACE_HEAD_TEST', False)]
 
         for k, v in defaults:
             app.config.setdefault(k, v)
