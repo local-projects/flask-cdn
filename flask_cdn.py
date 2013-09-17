@@ -45,7 +45,7 @@ def url_for(endpoint, **values):
             # swap out with the rackspace endpoint rule to avoid the '/static/' path
             url = urls.build(endpoint = app.cdn_rackspace.rackspace_endpoint, values=values, force_external=True)
 
-            if app.config['CDN_RACKSPACE_HEAD_TEST']
+            if app.config['CDN_RACKSPACE_HEAD_TEST']:
                 # test the url
                 resp = requests.head(url)
                 if resp.status_code == 200:
