@@ -34,13 +34,10 @@ def upload_rackspace_image(resource, resource_name = None):
 class CDN_RACKSPACE(object):
 
     def __init__(self, app):
-        self.rackspace_endpoint = 'rackspace'
         self.app = app
         self.container = self.get_rackspace_container()
         self.rackspace_url = self.get_rackspace_url()
-        # adding the 'rackspace' endpoint
-        self.app.add_url_rule('/<path:filename>',
-                              endpoint=self.rackspace_endpoint)
+
         
         print "We've initialized the rackspace"
 

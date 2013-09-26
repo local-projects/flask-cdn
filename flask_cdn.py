@@ -41,9 +41,24 @@ def url_for(endpoint, **values):
             rack_parts = urlparse(rack_url)
             rack_bare_url = rack_parts.netloc + rack_parts.path
 
-            urls = app.url_map.bind( rack_bare_url, url_scheme=scheme )
-            # swap out with the rackspace endpoint rule to avoid the '/static/' path
-            url = urls.build(endpoint = app.cdn_rackspace.rackspace_endpoint, values=values, force_external=True)
+            """
+              note originally we tried to use the flask native url_for, but it kept adding the
+              endpoint to the url, such as "gfgfgf.rackspace.com/rackspace/file.htm"
+
+              in flask_cdn_rackspace.py : init
+                self.rackspace_endpoint = 'rackspace'
+
+                # adding the 'rackspace' endpoint
+                self.app.add_url_rule('/' + self.rackspace_endpoint + '/<path:filename>',
+                                     endpoint=self.rackspace_endpoint)
+
+              in this file:
+                urls = app.url_map.bind( rack_bare_url, url_scheme=scheme )
+                # swap out with the rackspace endpoint rule to avoid the '/static/' path
+                url = urls.build(endpoint = app.cdn_rackspace.rackspace_endpoint, values=values, force_external=True)
+            """
+
+            url = rack_parts.scheme + "://" + rack_parts.netloc + "/" + values['filename']
 
             if app.config['CDN_RACKSPACE_HEAD_TEST']:
                 # test the url
